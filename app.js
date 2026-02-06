@@ -1,17 +1,27 @@
 const express = require('express');
+const logger = require('./logger/logger.js');
+const tasksRoute = require('./router/tasksRoute.js');
+require('dotenv').config();
+
 const app = express();
-const port = 3000;
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(logger);
 
+//mounting a route
+app.use('/tasks', tasksRoute);
+
+
+app.get('/', (req, res) => {
+    res.status(200).send('Welcome to Task Manager API');
+});
+
+const port = process.env.PORT || 3000;
 app.listen(port, (err) => {
     if (err) {
         return console.log('Something bad happened', err);
     }
     console.log(`Server is listening on ${port}`);
 });
-
-
 
 module.exports = app;
