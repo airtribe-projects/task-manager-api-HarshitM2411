@@ -1,6 +1,20 @@
 const tasks = require('../task.json').tasks;
 
 const getAllTasks = (req, res) => {
+    const completed = req.query.completed;
+    const sorting = req.query.sorting;
+
+    if (completed !== undefined) {
+        const filteredTasks = tasks.filter((t) => t.completed === (completed === 'true'));
+        return res.status(200).send(filteredTasks);
+    }
+
+    if (sorting) {
+        const asc = sorting.toLowerCase() === 'asc';
+        const sortedTasks = [...tasks].sort((a, b) => asc ? new Date(a.completionDate) - new Date(b.completionDate) : new Date(b.completionDate) - new Date(a.completionDate));
+        return res.status(200).send(sortedTasks);
+    }
+
     res.status(200).send(tasks);
 }
 
@@ -14,6 +28,12 @@ const getTaskById = (req, res) => {
     }
 }
 
+const getTaskByPriority = (req, res) => {
+    const priority = req.params.priority;
+    const filteredTasks = tasks.filter((t) => t.priority.toLowerCase() === priority.toLowerCase());
+    res.status(200).send(filteredTasks);
+}
+
 const createTask = (req, res) => {
     const payload = req.body;
 
@@ -25,6 +45,8 @@ const createTask = (req, res) => {
         title: payload.title,
         description: payload.description,
         completed: payload.completed,
+        priority: payload.priority || 'low',
+        completionDate: payload.completionDate || new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // if date not present set it to 10 days from now
     }
 
     newTask.id = tasks.length + 1;
@@ -46,6 +68,8 @@ const updateTask = (req, res) => {
         task.title = payload.title || task.title;
         task.description = payload.description || task.description;
         task.completed = payload.completed || task.completed;
+        task.priority = payload.priority || task.priority;
+        task.completionDate = payload.completionDate || task.completionDate;
         res.status(200).send(task);
     } else {
         res.status(404).send({ message: 'Invalid Task ID' });
@@ -67,6 +91,7 @@ const deleteTask = (req, res) => {
 module.exports = {
     getAllTasks,
     getTaskById,
+    getTaskByPriority,
     createTask,
     updateTask,
     deleteTask
